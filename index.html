@@ -11,15 +11,17 @@
   </head>
 
   <body>
+    <input type="file" id="imageInput" accept="image/*" />
+    <canvas id="canvas" width="320" height="260"></canvas>
+
     <script type="text/javascript">
       // Classifier Variable
       let classifier;
       // Model URL
       let imageModelURL = "./model/";
 
-      // Video
-      let video;
-      let flippedVideo;
+      // Image
+      let img;
       // To store the classification
       let label = "";
 
@@ -30,19 +32,16 @@
 
       function setup() {
         createCanvas(320, 260);
-        video = createCapture(VIDEO);
-        video.size(320, 240);
-        video.hide();
-
-        flippedVideo = ml5.flipImage(video);
-        // Start classifying
-        classifyVideo();
+        document
+          .getElementById("imageInput")
+          .addEventListener("change", handleImage);
       }
 
       function draw() {
         background(0);
-        // Draw the video
-        image(flippedVideo, 0, 0);
+        if (img) {
+          image(img, 0, 0, 320, 240);
+        }
 
         // Draw the label
         fill(255);
@@ -51,10 +50,21 @@
         text(label, width / 2, height - 4);
       }
 
-      function classifyVideo() {
-        flippedVideo = ml5.flipImage(video);
-        classifier.classify(flippedVideo, gotResult);
-        flippedVideo.remove();
+      function handleImage(e) {
+        if (img) {
+          img.remove();
+        }
+
+        // Get the selected file
+        const file = e.target.files[0];
+        if (file) {
+          img = createImg(URL.createObjectURL(file), classifyImage);
+          img.hide();
+        }
+      }
+
+      function classifyImage() {
+        classifier.classify(img, gotResult);
       }
 
       function gotResult(error, results) {
@@ -64,9 +74,9 @@
         }
         label =
           results[0].label == "Organico" && results[0].confidence > 0.3
-            ? "No recyclable"
-            : "Recyclable";
-        classifyVideo();
+            ? "No Recycle"
+            : "Recycle";
+        redraw();
       }
     </script>
   </body>
